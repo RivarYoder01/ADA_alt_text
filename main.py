@@ -2,7 +2,9 @@
 
 import requests # Library that requests content from HTML
 import sys # Allows ending of program
-from openai import OpenAI # Passes into ChatGPT to generate alt text
+import os
+import openai
+from dotenv import load_dotenv
 
 # from requests.auth import HTTPBasicAuth
 
@@ -27,24 +29,25 @@ def capture_wp_images():
         return []
 
 def generate_alt_text(pulled_images):
-    client = OpenAI()
+    load_dotenv()
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=[{
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": "what's in this image?"},
-                {
-                    "type": "input_image",
-                    "image_url": pulled_images,
-                },
-            ],
-        }],
+    prompt = ("Generate alternative text for this image that is no longer than 150 characters long. Do not give any "
+              "other text and clear all formatting. Describe the image's purpose, essential information, only include "
+              "what is relevant to a sighted user. Use natural language, no abbreviations or jargon. Avoid phrases "
+              "like 'click here' and 'image of'. End with a period.")
+
+    result = openai.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
     )
 
-    print(response.output_text)
-    return response.output_text
+    print(result.choices[0].message.content)
 
 
 if __name__ == "__main__":
