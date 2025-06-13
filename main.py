@@ -38,9 +38,15 @@ def pull_wp_images():
 
     if response.status_code == 200: # Request successful, json file has been pulled
         images = response.json() # Reads files
-        image_urls = [image['source_url'] for image in images if image['media_type'] == 'image'] # FOR LOOP pulls images
-        return image_urls
-    else:
+        pulled_images = [image['source_url'] for image in images if image['media_type'] == 'image'] # FOR LOOP pulls images
+        if pulled_images != "": # pulled_images is not empty, loop through list and pass to generate_alt_text
+            for image in pulled_images:
+                generate_alt_text(pulled_images[0])
+            return []
+        else: # pulled_images is empty
+            print('No images found')
+            sys.exit(0)
+    else: # Request unsuccessful != 200
         print("Error fetching images.") # Error handling
         return []
 
@@ -83,22 +89,20 @@ def generate_alt_text(pulled_images: list):
 
     print(result.choices[0].message.content)
 
+    alt_text_to_wp(result.choices[0].message.content)
+
+
+def alt_text_to_wp(result):
+    print(result) # temp
+
     return
+
 
 def main():
     """
-    Calls pull_wp_images() to pull image URLs from a provided link. Enters IF ELSE and calls generate_alt_text() IF
-    pulled_images is not empty. ELSE, ends program
+    Calls pull_wp_images() to pull image URLs from a provided link.
     """
-    pulled_images = pull_wp_images()
-
-    if pulled_images != "":
-        for image in pulled_images:
-            generate_alt_text(pulled_images[0])
-        sys.exit(0)
-    else:
-        print('No images found')
-        sys.exit(0)
+    pull_wp_images()
 
 
 if __name__ == "__main__":
