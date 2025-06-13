@@ -1,22 +1,38 @@
 #!/usr/bin/env python3
 
-import requests # Library that requests content from HTML
-import sys # Allows ending of program
-import os
-import openai
-from dotenv import load_dotenv
+"""
+Program aims to pull information from a given URL and pass it to ChatGPT to generate alternative text based on what is
+in the given image.
 
-# from requests.auth import HTTPBasicAuth
+FUNCTIONS:
+main()
+pull_wp_images()
+generate_alt_text(pulled_images: list)
+alt_text_to_wp(result.choices[0].message.content) IN PROGRESS
+"""
 
+__author__ = 'Rivar Yoder'
+__version__ = '1.0'
+__date__ = '2025.06.02'
+__status__ = 'Development'
+
+import requests # Requests content from HTML
+import sys # Ending of program
+import os # Access to other platforms (openAI and WordPress)
+import openai # Chatgpt access
+from dotenv import load_dotenv # .env access
+
+# TEMPORARY INFORMATION
 # WP_USERNAME = "Noah"
 # WP_APP_PASSWORD = "iZg8 Jhk1 kYTY spxJ yQm3 yJc9"
-# WP_API_BASE = "https://bestpointwebdesign.com/wp-json/wp/v2/media"
-
 # AUTH = HTTPBasicAuth(WP_USERNAME, WP_APP_PASSWORD)
-OPENAI_API_KEY = ('sk-proj-eh0mLZJTyQgKwSWnux-5yudtUaHpzBUqg6WjhcMVKmTUeZ4T-yFdGxTrDcH8LKhw2qm4QDXfXVT3BlbkFJfMLA0pm38iesB2'
-              'pS1icSyd-oClbJ7OV3deMlS2PX8vjY-A93X6-IatDgzvspG0K1ocwIYbx_4A')
 
-def capture_wp_images():
+def pull_wp_images():
+    """
+    Function accesses provided URL and IF the request is successful, the program reads the file and pulls the image's
+    urls with a FOR LOOP.
+    :return: image_urls OR null:
+    """
     url = "https://bestpointwebdesign.com/wp-json/wp/v2/media" # Need to find a way to autopopulate
     response = requests.get(url)
 
@@ -28,44 +44,62 @@ def capture_wp_images():
         print("Error fetching images.") # Error handling
         return []
 
-def generate_alt_text(pulled_images):
-    load_dotenv()
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+def generate_alt_text(pulled_images: list):
+    """
+    Takes in pulled_images as a list, using load_dotenv() to pull the API key from .env file. OS is used to access
+    ChatGPT with that key.
+
+    The Prompt: Generate alternative text for this image that is no longer than 150 characters long. Do not give any
+                other text and clear all formatting. Describe the image's purpose, essential information, only include
+                what is relevant to a sighted user. Use natural language, no abbreviations or jargon. Avoid phrases
+                like 'click here' and 'image of'. End with a period.
+
+    Image URL: Pulled from pull_wp_images
+
+    FOR NOW: Prints result from Chatgpt, will soon pass into a function to pass alt text into WordPress
+
+    :param pulled_images:
+    :return:
+    """
+    load_dotenv() # opens .env
+    openai.api_key = os.getenv("OPENAI_API_KEY") # Pulls key from .env
 
     prompt = ("Generate alternative text for this image that is no longer than 150 characters long. Do not give any "
               "other text and clear all formatting. Describe the image's purpose, essential information, only include "
               "what is relevant to a sighted user. Use natural language, no abbreviations or jargon. Avoid phrases "
               "like 'click here' and 'image of'. End with a period.")
 
-    result = openai.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
+    result = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[ # Message to chatgpt
             {
                 "role": "user",
-                "content": prompt
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": pulled_images}}] # pulled_images passed into function
             }
         ]
     )
 
     print(result.choices[0].message.content)
 
+    return
 
-if __name__ == "__main__":
+def main():
     """
-    Generate alternative text for this image 
-    {https://bestpointwebdesign.com/wp-content/uploads/2025/02/App-Image-Home.png} that is no longer than 150 
-    characters long. Do not give any other text and clear all formatting. Describe the image's purpose, essential 
-    information, only include what is relevant to a sighted user. Use natural language, no abbreviations or jargon. 
-    Avoid phrases like 'click here' and 'image of'. End with a period.
+    Calls pull_wp_images() to pull image URLs from a provided link. Enters IF ELSE and calls generate_alt_text() IF
+    pulled_images is not empty. ELSE, ends program
     """
-    pulled_images = capture_wp_images()
+    pulled_images = pull_wp_images()
 
-    if pulled_images == "":
-        print('No images found')
+    if pulled_images != "":
+        for image in pulled_images:
+            generate_alt_text(pulled_images[0])
         sys.exit(0)
     else:
-        for image in pulled_images:
-            generate_alt_text(pulled_images)
-
+        print('No images found')
         sys.exit(0)
 
+
+if __name__ == "__main__":
+    main()
