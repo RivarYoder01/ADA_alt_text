@@ -9,6 +9,7 @@ main()
 pull_wp_images()
 generate_alt_text(pulled_images: list)
 alt_text_to_wp(result.choices[0].message.content) IN PROGRESS
+
 """
 
 __author__ = 'Rivar Yoder'
@@ -26,6 +27,7 @@ from dotenv import load_dotenv # .env access
 # WP_USERNAME = "Noah"
 # WP_APP_PASSWORD = "iZg8 Jhk1 kYTY spxJ yQm3 yJc9"
 # AUTH = HTTPBasicAuth(WP_USERNAME, WP_APP_PASSWORD)
+
 
 def pull_wp_images():
     """
@@ -49,6 +51,7 @@ def pull_wp_images():
     else: # Request unsuccessful != 200
         print("Error fetching images.") # Error handling
         return []
+
 
 def generate_alt_text(pulled_images: list):
     """
