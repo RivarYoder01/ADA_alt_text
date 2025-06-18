@@ -22,12 +22,14 @@ import sys # Ending of program
 import os # Access to other platforms (openAI and WordPress)
 import openai # Chatgpt access
 from dotenv import load_dotenv # .env access
+import json
 
 # TEMPORARY INFORMATION
 # WP_USERNAME = "Noah"
 # WP_APP_PASSWORD = "iZg8 Jhk1 kYTY spxJ yQm3 yJc9"
 # AUTH = HTTPBasicAuth(WP_USERNAME, WP_APP_PASSWORD)
 
+API_URL = "https://bestpointwebdesign.com/wp-json/wp/v2/media"
 
 def pull_wp_images():
     """
@@ -35,15 +37,15 @@ def pull_wp_images():
     urls with a FOR LOOP.
     :return: image_urls OR null:
     """
-    url = "https://bestpointwebdesign.com/wp-json/wp/v2/media" # Need to find a way to autopopulate
-    response = requests.get(url)
+
+    response = requests.get(API_URL)
 
     if response.status_code == 200: # Request successful, json file has been pulled
         images = response.json() # Reads files
         pulled_images = [image['source_url'] for image in images if image['media_type'] == 'image'] # FOR LOOP pulls images
         if pulled_images != "": # pulled_images is not empty, loop through list and pass to generate_alt_text
-            for image in pulled_images:
-                generate_alt_text(pulled_images[0])
+            # for i in pulled_images:
+            generate_alt_text(pulled_images[0])
             return []
         else: # pulled_images is empty
             print('No images found')
@@ -78,17 +80,21 @@ def generate_alt_text(pulled_images: list):
               "what is relevant to a sighted user. Use natural language, no abbreviations or jargon. Avoid phrases "
               "like 'click here' and 'image of'. End with a period.")
 
-    result = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[ # Message to chatgpt
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": pulled_images}}] # pulled_images passed into function
-            }
-        ]
-    )
+    try:
+        result = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[ # Message to chatgpt
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": pulled_images}}] # pulled_images passed into function
+                }
+            ]
+        )
+    except Exception as e:
+        print(f"Unexpected error connecting to or receiving from ChatGPT: {e}")
+        sys.exit(0)
 
     print(result.choices[0].message.content)
 
@@ -96,7 +102,15 @@ def generate_alt_text(pulled_images: list):
 
 
 def alt_text_to_wp(result):
-    print(result) # temp
+    try:
+        todo = {"userId": 1, "alt": result, "completed": False}
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(API_URL, data=json.dumps(todo), headers=headers)
+        response.json()
+        print("Success?")
+
+    except Exception as e:
+        print(f"Error: {e}")
 
     return
 
