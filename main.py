@@ -44,7 +44,7 @@ def pull_wp_images():
         images = response.json() # Reads files
         pulled_images = [image['source_url'] for image in images if image['media_type'] == 'image'] # FOR LOOP pulls images
         if pulled_images != "": # pulled_images is not empty, loop through list and pass to generate_alt_text
-            # for i in pulled_images:
+            # for i in pulled_images:java -jar bfg-1.14.0.jar --delete-files .env
             generate_alt_text(pulled_images[0])
             return []
         else: # pulled_images is empty
