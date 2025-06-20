@@ -73,7 +73,7 @@ def generate_alt_text(pulled_images: list):
     :return:
     """
     load_dotenv() # opens .env
-    openai.api_key = os.getenv("OPENAI_API_KEY") # Pulls key from .env
+    openai.api_key = os.environ.get("OPENAI_API_KEY") # Pulls key from .env
 
     prompt = ("Generate alternative text for this image that is no longer than 150 characters long. Do not give any "
               "other text and clear all formatting. Describe the image's purpose, essential information, only include "
